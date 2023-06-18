@@ -89,5 +89,10 @@ pwReduce:: Hash -> Passwd
 pwReduce h =  map toLetter (reverse convertList)
   where convertList = take pwLength (convertNLetter h)
 
+chain :: Int -> Passwd -> Hash
+chain 0 w = pwHash w
+chain h w = chain (h - 1) (pwReduce (pwHash w))
 
-
+rainbowTable :: Int -> [Passwd] -> Map.Map Hash Passwd
+rainbowTable _ [] = Map.empty
+rainbowTable h (w:ws) = Map.insert (chain h w) w (rainbowTable h ws)

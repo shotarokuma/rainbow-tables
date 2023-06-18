@@ -59,6 +59,7 @@ test-suite a1-test
   main-is: Spec.hs
   other-modules:
       PwReduce
+      RainbowTable
       Paths_a1
   hs-source-dirs:
       test
