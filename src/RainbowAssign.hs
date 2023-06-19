@@ -7,6 +7,7 @@ import qualified Data.Map as Map
 -- modules needed for hashString
 import Data.Bits
 import Data.Char        ( ord )
+import Data.Maybe (Maybe(..))
 
 -- types for clarity
 type Hash = Int32
@@ -96,3 +97,17 @@ chain h w = chain (h - 1) (pwReduce (pwHash w))
 rainbowTable :: Int -> [Passwd] -> Map.Map Hash Passwd
 rainbowTable _ [] = Map.empty
 rainbowTable h (w:ws) = Map.insert (chain h w) w (rainbowTable h ws)
+
+gainPassword :: Passwd -> Int -> Passwd
+gainPassword password 0 = password
+gainPassword password target = gainPassword (pwReduce (pwHash password)) (target - 1) 
+
+reverseChain :: Map.Map Hash Passwd -> Int -> Hash -> Maybe Passwd
+reverseChain table 0 hash = Map.lookup hash table
+reverseChain table reminder hash =   
+    case Map.lookup hash table of
+    Nothing -> reverseChain table (reminder - 1) (pwHash (pwReduce hash))
+    Just password -> Just (gainPassword password reminder)
+
+findPassword :: Map.Map Hash Passwd -> Int -> Hash -> Maybe Passwd
+findPassword table width hash = reverseChain table width hash

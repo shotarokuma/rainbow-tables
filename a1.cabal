@@ -58,6 +58,7 @@ test-suite a1-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      FindPassword
       PwReduce
       RainbowTable
       Paths_a1
