@@ -7,20 +7,26 @@ import qualified Data.Map as Map
 -- modules needed for hashString
 import Data.Bits
 import Data.Char        ( ord )
-import Data.Maybe (Maybe(..))
 
 -- types for clarity
 type Hash = Int32
 type Passwd = String
 
--- constant value 
 pwLength, nLetters, width, height :: Int
 filename :: FilePath
+-- constant value 
 pwLength = 8            -- length of each password
 nLetters = 5            -- number of letters to use in passwords: 5 -> a-e
 width = 40              -- length of each chain in the table
 height = 1000           -- number of "rows" in the table
 filename = "table.txt"  -- filename to store the table
+
+-- constatn value for another experiment 
+-- pwLength = 5
+-- nLetters = 18
+-- width = 60
+-- height = 800
+-- filename = "table.txt" 
 
 -- hashString function from GHC's Data.HashTable (adapted from file libraries/base/Data/HashTable.hs in GHC source)
 hashString :: String -> Int32
@@ -80,34 +86,3 @@ readTable fn = do
   tableStr <- readFile fn
   let tableData = read tableStr
   return (Map.fromList tableData)
-
-
--- my code
-convertNLetter :: Hash -> [Int]
-convertNLetter h = fromIntegral (h `mod` fromIntegral nLetters) : convertNLetter (h `div` 5)
-
-pwReduce:: Hash -> Passwd
-pwReduce h =  map toLetter (reverse convertList)
-  where convertList = take pwLength (convertNLetter h)
-
-chain :: Int -> Passwd -> Hash
-chain 0 w = pwHash w
-chain h w = chain (h - 1) (pwReduce (pwHash w))
-
-rainbowTable :: Int -> [Passwd] -> Map.Map Hash Passwd
-rainbowTable _ [] = Map.empty
-rainbowTable h (w:ws) = Map.insert (chain h w) w (rainbowTable h ws)
-
-gainPassword :: Passwd -> Int -> Passwd
-gainPassword password 0 = password
-gainPassword password target = gainPassword (pwReduce (pwHash password)) (target - 1) 
-
-reverseChain :: Map.Map Hash Passwd -> Int -> Hash -> Maybe Passwd
-reverseChain table 0 hash = Map.lookup hash table
-reverseChain table reminder hash =   
-    case Map.lookup hash table of
-    Nothing -> reverseChain table (reminder - 1) (pwHash (pwReduce hash))
-    Just password -> Just (gainPassword password reminder)
-
-findPassword :: Map.Map Hash Passwd -> Int -> Hash -> Maybe Passwd
-findPassword table width hash = reverseChain table width hash
